@@ -67,6 +67,10 @@ Vertex* Graph::addVertex(cv::Point2d point, Vertex::VertexType type)
     Vertex* vertex = new Vertex(point);
     vertex->setVertexType(type);
     m_vertexes.push_back(vertex);
+    if(Vertex::TYPE_SOURCE == type)
+        m_source = vertex;
+    if(Vertex::TYPE_SINK == type)
+        m_sink = vertex;
     return vertex;
 }
 
@@ -92,12 +96,12 @@ bool Graph::addFlowPath(Vertex *startvertex, Vertex *endvertex, double value)
     }
     /* 始点が見つからない場合はエラー */
     if(NULL == start){
-        LOG(ERROR) << "Can not find startvertex : " << startvertex->m_name << std::endl;
+        LOG(ERROR) << "Can not find startvertex (" << startvertex->m_point.x << "," << startvertex->m_point.y << ")" << std::endl;
         return false;
     }
     /* 終点が見つからない場合は追加 */
     if(NULL == end && NULL != endvertex){
-        end = addVertex(endvertex->m_point);
+        end = addVertex(endvertex->m_point, Vertex::TYPE_NEUTRAL);
     }
     start->addFlowPath(end, value);
     return true;
@@ -113,8 +117,8 @@ bool Graph::searchMaxFlow(void)
         while(vertex != m_source){
             Edge* edge = vertex->m_parentpath;
             edge->addFlow(m_sink->getValue());
-            LOG(INFO) << "add flow to " << edge->m_startvertex->m_name.c_str() << "-" \
-                      << edge->m_endvertex->m_name.c_str() << " by " \
+            LOG(INFO) << "add flow to " << "(" << edge->m_startvertex->m_point.x << "," << edge->m_startvertex->m_point.y << ")" << "-" \
+                      << "(" << edge->m_endvertex->m_point.x << "," << edge->m_endvertex->m_point.y << ")" << " by " \
                       << m_sink->getValue() << std::endl;
             vertex = vertex->m_parent;
         }
@@ -221,7 +225,7 @@ void Graph::displayMinCut(void)
     LOG(INFO) << "display mincut" << std::endl;
     for(size_t i = 0; i < m_mincut.size(); i++){
         Vertex *vertex = m_mincut[i];
-        LOG(INFO) << vertex->m_name.c_str() << std::endl;
+        LOG(INFO) << "(" << vertex->m_point.x << "," << vertex->m_point.y << ")" << std::endl;
     }
 }
 
@@ -235,6 +239,14 @@ google::LogMessage& operator<<(google::LogMessage& lhs, const Graph& rhs) {
 }
 
 /*--- Accessor --------------------------------------------------------------*/
+Vertex* Graph::getVertexAt(cv::Point2d point) {
+    for(size_t i = 0; i < m_vertexes.size(); i++) {
+        Vertex *vertex = m_vertexes.at(i);
+        if(vertex->isHere(point))
+            return vertex;
+    }
+    return NULL;
+}
 
 /*--- Event -----------------------------------------------------------------*/
 

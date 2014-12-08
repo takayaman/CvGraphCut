@@ -80,8 +80,8 @@ double Edge::addFlow(double flow)
 /*  Log output operator */
 google::LogMessage& operator<<(google::LogMessage& lhs, const Edge& rhs) {
     lhs.stream() << "graphcut_base::Edge{" \
-                 << "start : " << rhs.m_startvertex->m_name.c_str() \
-                 << "end : " << rhs.m_endvertex->m_name.c_str() \
+                 << "start : (" << rhs.m_startvertex->m_point.x << "," << rhs.m_startvertex->m_point.y << ")" \
+                 << "end :  (" << rhs.m_endvertex->m_point.x << "," << rhs.m_endvertex->m_point.y << ")" \
                  << "flow : " << rhs.getFlow() \
                  << "size : " << rhs.getSize() \
                  << "}" << std::endl;

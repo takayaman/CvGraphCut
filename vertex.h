@@ -77,6 +77,7 @@ public:
     void setPoint(cv::Point2d point);
 
     bool isVisited(void);
+    bool isHere(cv::Point2d point);
 
     void setVertexType(VertexType type);
     VertexType getVertexType(void);

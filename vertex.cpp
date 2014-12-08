@@ -34,10 +34,10 @@ Vertex::Vertex(void)
     m_vectorflowpath.clear();
 }
 
-Vertex::Vertex(std::string name)
+Vertex::Vertex(cv::Point2d point)
     : m_parent(NULL),
       m_parentpath(NULL),
-      m_point(cv::Point2d(0, 0)),
+      m_point(point),
       m_value(0.0),
       is_visited(false)
 {
@@ -120,13 +120,17 @@ bool Vertex::isVisited(void)
     return is_visited;
 }
 
+bool Vertex::isHere(cv::Point2d point) {
+    return m_point == point;
+}
+
 
 void Vertex::setVertexType(VertexType type) {
-    return m_vertextype;
+    m_vertextype = type;
 }
 
 Vertex::VertexType Vertex::getVertexType(void){
-    m_vertextype = type;
+    return m_vertextype;
 }
 
 

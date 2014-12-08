@@ -58,7 +58,9 @@ public:
     void searchMinCut(Vertex *source);
     void displayMinCut(void);
 
-    public:
+    Vertex* getVertexAt(cv::Point2d point);
+
+public:
     std::vector<Vertex*> m_vertexes;
     std::vector<Vertex*> m_mincut;
     Vertex* m_source;

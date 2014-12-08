@@ -65,17 +65,20 @@
 
 namespace cvgraphcut_base {
 
-
 class Gmm {
 public:
-    static const int32_t componentsCount = 5;
+    static const int32_t kComponentsCount = 5;
+    static const int32_t kMeanSize = 3;
+    static const int32_t kCovarianceSize = 9;
+    static const int32_t kComponentWeightSize = 1;
+
+    typedef cv::Vec<double_t, kMeanSize> MeanData;
+    typedef cv::Vec<double_t, kCovarianceSize> CoVarianceData;
 
     /*!
     * Defoult constructor
     */
     Gmm(void);
-
-    Gmm(cv::Mat& model);
 
     /*!
     * Default destructor
@@ -94,22 +97,49 @@ public:
     */
     Gmm& operator=(const Gmm& rhs);
 
-    double operator ()(const cv::Vec3d color) const;
-    double operator ()(int32_t index_component, const cv::Vec3d color) const;
+    double_t operator ()(const cv::Vec3d color) const;
+    double_t operator ()(int32_t index_component, const cv::Vec3d color) const;
 
-    int32_t whichComponent(const Vec3d color) const;
+    int32_t whichComponent(const cv::Vec3d color) const;
 
-    void initLearning();
+    /* ガウス変数計算用のメンバを初期化 */
+    void initLearning(void);
+    /* 色値を基にガウス変数を計算 */
     void addSample(int32_t index_component, const cv::Vec3d color);
+    /* addSample()の計算値をガウス変数に反映 */
     void endLearning(void);
 
 private:
+    void init(void);
     void calcInverseCovAndDeterm(int32_t index_component);
+    double_t calcLikelihoodInComponent(int32_t index_component, const cv::Vec3d color) const;
+    double_t calcSumOfLikelihood(const cv::Vec3d color) const;
 
 private:
-    cv::Mat m_model;
-    std::vector<double> m_coefficients;
-    std::vector<double> m_means;
+    /* 学習用モデルデータ */
+    // cv::Mat m_model;
+
+    /* ガウス分布間の相対係数 */
+    std::vector<double_t> m_coefficients;
+    /* 平均値 */
+    std::vector<MeanData> m_means;
+    /* 共分散 */
+    std::vector<CoVarianceData> m_covariants;
+
+    /* 逆行列の共分散 */
+    double_t m_inverse_covariants[kComponentsCount][3][3];
+    /* 行列式 */
+    double_t m_covariant_Determinants[kComponentsCount];
+
+    /* データの合計値 */
+    double_t m_sums[kComponentsCount][3];
+    /* データの積 */
+    double_t m_products[kComponentsCount][3][3];
+
+    /* ガウス分布毎のデータ数 */
+    int32_t m_samplecounts[kComponentsCount];
+    /* 全体のデータ数 */
+    int32_t m_totalsamplecount;
 
 };
 
