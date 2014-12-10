@@ -79,6 +79,13 @@ void SiftMatcher::matching(void) {
                 pare.m_destination_key = dst_keys.at(index_dst);
                 pare.m_source_descriptor = src_feature.clone();
                 pare.m_destination_descriptor = dst_feature.clone();
+                pare.m_difference_descriptor = src_feature.clone();
+                /* ディープコピー */
+                for(int32_t i = 0; i < src_feature.rows; i++)
+                    for(int32_t j = 0; j < src_feature.cols; j++) {
+                        pare.m_difference_descriptor.at<float_t>(i, j) = pare.m_source_descriptor.at<float_t>(i, j) - pare.m_destination_descriptor.at<float_t>(i, j);
+                    }
+                //pare.m_difference_descriptor = pare.m_source_descriptor - pare.m_destination_descriptor;
                 pare.m_distance = l2_norm;
                 pare.m_diff_angle = pare.m_source_key.angle - pare.m_destination_key.angle;
                 pare.m_diff_octave = pare.m_source_key.octave - pare.m_destination_key.octave;
@@ -96,6 +103,7 @@ void SiftMatcher::matching(void) {
             pare.m_destination_key = cv::KeyPoint(cv::Point2f(-1, -1), -1, -1, -1, -1, -1);
             pare.m_source_descriptor = src_feature.clone();
             pare.m_destination_descriptor = cv::Mat();
+            pare.m_difference_descriptor = cv::Mat();
             pare.m_distance = -1;
             pare.m_diff_angle = -1;
             pare.m_diff_octave = -1;
@@ -136,6 +144,7 @@ void SiftMatcher::matching(void) {
             continue;
         std::sort(group.begin(), group.end(), SiftMatchPare::lessDistance);
     }
+    is_buildmatchgroups = true;
 }
 
 /*  Log output operator */

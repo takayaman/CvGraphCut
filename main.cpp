@@ -64,7 +64,10 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     /* 最終結果表示用にコピー */
-    cv::Mat resultimage = focused_image.clone();
+    cv::Mat cutresultimage = focused_image.clone();
+    cv::Mat delaunayresultimage = focused_image.clone();
+    cv::Mat volonoyresultimage = focused_image.clone();
+    cv::Mat modelresultimage = focused_image.clone();
 
     /* SIFT + マッチング */
     cvgraphcut_base::SiftData focused_data(focused_image);
@@ -100,10 +103,29 @@ int main(int argc, char *argv[]) {
     cvgraphcut_base::SiftGraphBuilder gcbuilder(match_groups, cv::Rect(cv::Point(0, 0), cv::Point(focused_image.cols, focused_image.rows)));
     gcbuilder.build();
     gcbuilder.cutGraph();
-    gcbuilder.drawPoints(resultimage, cvgraphcut_base::SiftGraphBuilder::DRAW_BOTH);
 
-    cv::imshow("Result", resultimage);
-    cv::waitKey(0);
+    /* 結果描画 */
+    gcbuilder.drawCuttedPoints(cutresultimage, cvgraphcut_base::SiftGraphBuilder::DRAW_BOTH);
+    gcbuilder.drawGraphs(delaunayresultimage, cvgraphcut_base::SiftGraphBuilder::DRAW_DIV_DELAUNAY);
+    gcbuilder.drawGraphs(volonoyresultimage, cvgraphcut_base::SiftGraphBuilder::DRAW_DIV_VORONOY);
+
+    /* 前景モデル */
+    gcbuilder.drawSiftGroups(modelresultimage, 0, cv::Scalar(0, 0, 255));
+    gcbuilder.drawSiftGroups(modelresultimage, 1, cv::Scalar(0, 0, 255));
+    gcbuilder.drawSiftGroups(modelresultimage, 2, cv::Scalar(0, 0, 255));
+
+    /* 背景モデル */
+    gcbuilder.drawSiftGroups(modelresultimage, 3, cv::Scalar(255, 0, 0));
+    gcbuilder.drawSiftGroups(modelresultimage, 4, cv::Scalar(255, 0, 0));
+    gcbuilder.drawSiftGroups(modelresultimage, 12, cv::Scalar(255, 0, 0));
+
+    //cv::imshow("Result", resultimage);
+    //cv::waitKey(0);
+
+    cv::imwrite("cutresult.png", cutresultimage);
+    cv::imwrite("delaunay.png", delaunayresultimage);
+    cv::imwrite("volonoy.png", volonoyresultimage);
+    cv::imwrite("model.png", modelresultimage);
 
     /* Finalize */
     google::InstallFailureSignalHandler();

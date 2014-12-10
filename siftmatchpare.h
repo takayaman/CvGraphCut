@@ -59,6 +59,7 @@ public:
 
     cv::Mat m_source_descriptor;
     cv::Mat m_destination_descriptor;
+    cv::Mat m_difference_descriptor;
 
     double_t m_distance;
     double_t m_diff_size;

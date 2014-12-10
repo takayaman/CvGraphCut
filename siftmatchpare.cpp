@@ -29,11 +29,13 @@ SiftMatchPare::SiftMatchPare(void)
       m_destination_key(cv::KeyPoint()),
       m_source_descriptor(cv::Mat()),
       m_destination_descriptor(cv::Mat()),
+      m_difference_descriptor(cv::Mat()),
       m_distance(0.0),
       m_diff_size(0.0),
       m_diff_angle(0.0),
       m_diff_response(0.0),
-      m_diff_octave(0.0) {
+      m_diff_octave(0.0),
+      is_matched(false) {
 }
 
 /* Default destructor */
@@ -47,11 +49,13 @@ SiftMatchPare::SiftMatchPare(const SiftMatchPare& rhs) {
         m_destination_key = rhs.m_destination_key;
         m_source_descriptor = rhs.m_source_descriptor;
         m_destination_descriptor = rhs.m_destination_descriptor;
+        m_difference_descriptor = rhs.m_difference_descriptor;
         m_distance = rhs.m_distance;
         m_diff_size = rhs.m_diff_size;
         m_diff_angle = rhs.m_diff_angle;
         m_diff_response = rhs.m_diff_response;
         m_diff_octave = rhs.m_diff_octave;
+        is_matched = rhs.is_matched;
     }
 }
 
@@ -60,11 +64,13 @@ SiftMatchPare& SiftMatchPare::operator=(const SiftMatchPare& rhs) {
     if(this != &rhs){
         m_source_key = rhs.m_source_key;
         m_destination_key = rhs.m_destination_key;
+        m_difference_descriptor = rhs.m_difference_descriptor;
         m_distance = rhs.m_distance;
         m_diff_size = rhs.m_diff_size;
         m_diff_angle = rhs.m_diff_angle;
         m_diff_response = rhs.m_diff_response;
         m_diff_octave = rhs.m_diff_octave;
+        is_matched = rhs.is_matched;
     }
     return *this;
 }
