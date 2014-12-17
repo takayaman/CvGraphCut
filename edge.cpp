@@ -25,20 +25,18 @@ namespace cvgraphcut_base {
 
 /* Defoult constructor */
 Edge::Edge(void)
-    : m_startvertex(NULL),
-      m_endvertex(NULL),
-      m_reverseedge(NULL),
-      m_flow(0.0),
-      m_size(0.0)
-{
+  : m_startvertex(NULL),
+    m_endvertex(NULL),
+    m_reverseedge(NULL),
+    m_flow(0.0),
+    m_size(0.0) {
 }
 
 Edge::Edge(Vertex *startvertex, Vertex *endvertex, double size)
-    : m_startvertex(startvertex),
-      m_endvertex(endvertex),
-      m_flow(0.0),
-      m_size(size)
-{
+  : m_startvertex(startvertex),
+    m_endvertex(endvertex),
+    m_flow(0.0),
+    m_size(size) {
 }
 
 /* Default destructor */
@@ -47,71 +45,65 @@ Edge::~Edge() {
 
 /*  Copy constructor */
 Edge::Edge(const Edge& rhs) {
-    if (this != &rhs) {
-        m_startvertex = rhs.m_startvertex;
-        m_endvertex = rhs.m_endvertex;
-        m_reverseedge = rhs.getReverseEdge();
-        m_flow = rhs.getFlow();
-        m_size = rhs.getSize();
-    }
+  if (this != &rhs) {
+    m_startvertex = rhs.m_startvertex;
+    m_endvertex = rhs.m_endvertex;
+    m_reverseedge = rhs.getReverseEdge();
+    m_flow = rhs.getFlow();
+    m_size = rhs.getSize();
+  }
 }
 
 /* Assignment operator */
 Edge& Edge::operator=(const Edge& rhs) {
-    if (this != &rhs) {
-        m_startvertex = rhs.m_startvertex;
-        m_endvertex = rhs.m_endvertex;
-        m_reverseedge = rhs.getReverseEdge();
-        m_flow = rhs.getFlow();
-        m_size = rhs.getSize();
-    }
-    return *this;
+  if (this != &rhs) {
+    m_startvertex = rhs.m_startvertex;
+    m_endvertex = rhs.m_endvertex;
+    m_reverseedge = rhs.getReverseEdge();
+    m_flow = rhs.getFlow();
+    m_size = rhs.getSize();
+  }
+  return *this;
 }
 
 /*--- Operation -------------------------------------------------------------*/
-double Edge::addFlow(double flow)
-{
-    m_flow += flow;
-    if(m_reverseedge)
-        m_reverseedge->setFlow(-flow);
-    return flow;
+double Edge::addFlow(double flow) {
+  m_flow += flow;
+  if(m_reverseedge)
+    m_reverseedge->setFlow(-flow);
+  return flow;
 }
 
 /*  Log output operator */
 google::LogMessage& operator<<(google::LogMessage& lhs, const Edge& rhs) {
-    lhs.stream() << "graphcut_base::Edge{" \
-                 << "start : (" << rhs.m_startvertex->m_point.x << "," << rhs.m_startvertex->m_point.y << ")" \
-                 << "end :  (" << rhs.m_endvertex->m_point.x << "," << rhs.m_endvertex->m_point.y << ")" \
-                 << "flow : " << rhs.getFlow() \
-                 << "size : " << rhs.getSize() \
-                 << "}" << std::endl;
-    return lhs;
+  lhs.stream() << "graphcut_base::Edge{" \
+               << "start : (" << rhs.m_startvertex->m_point.x << "," << rhs.m_startvertex->m_point.y << ")" \
+               << "end :  (" << rhs.m_endvertex->m_point.x << "," << rhs.m_endvertex->m_point.y << ")" \
+               << "flow : " << rhs.getFlow() \
+               << "size : " << rhs.getSize() \
+               << "}" << std::endl;
+  return lhs;
 }
 
 /*--- Accessor --------------------------------------------------------------*/
-void Edge::setFlow(double flow)
-{
-    m_flow = flow;
+void Edge::setFlow(double flow) {
+  m_flow = flow;
 }
 
-double Edge::getFlow(void) const
-{
-    return m_flow;
+double Edge::getFlow(void) const {
+  return m_flow;
 }
 
-void Edge::setReverseEdge(Edge *reverseedge)
-{
-    m_reverseedge = reverseedge;
+void Edge::setReverseEdge(Edge *reverseedge) {
+  m_reverseedge = reverseedge;
 }
 
-Edge* Edge::getReverseEdge(void) const
-{
-    return m_reverseedge;
+Edge* Edge::getReverseEdge(void) const {
+  return m_reverseedge;
 }
 
-double Edge::getSize(void) const
-{
-    return m_size;
+double Edge::getSize(void) const {
+  return m_size;
 }
 
 /*--- Event -----------------------------------------------------------------*/

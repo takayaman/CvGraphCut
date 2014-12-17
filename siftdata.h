@@ -8,8 +8,8 @@
  * Packing sift information
  *===========================================================================*/
 
-#ifndef _HOME_TAKAYAMAN_DOCUMENTS_PROGRAMMING_OPENCV_CVGRAPHCUT_CVGRAPHCUT_SIFTDATA_H_
-#define _HOME_TAKAYAMAN_DOCUMENTS_PROGRAMMING_OPENCV_CVGRAPHCUT_CVGRAPHCUT_SIFTDATA_H_
+#ifndef CVGRAPHCUT_CVGRAPHCUT_SIFTDATA_H_
+#define CVGRAPHCUT_CVGRAPHCUT_SIFTDATA_H_
 
 /*=== Include ===============================================================*/
 
@@ -18,59 +18,104 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
 
+#include <vector>
+
 /*=== Define ================================================================*/
+
 
 /*=== Class Definition  =====================================================*/
 
 namespace cvgraphcut_base {
 
 
+/** Class for basic SIFT operation and matching.
+ */
 class SiftData {
-public:
-    /*!
-    * Defoult constructor
-    */
-    SiftData(cv::Mat &image);
+ public:
+  /** Constructor
+   * @param image Image for extract SIFT
+   */
+  explicit SiftData(const cv::Mat &image);
 
-    /*!
-    * Default destructor
-    */
-    ~SiftData(void);
+  /** Default destructor
+   */
+  ~SiftData(void);
 
-    /*!
-    * Assignment operator
-    * @param rhs Right hand side
-    * @return pointer of this object
-    */
-    SiftData& operator=(const SiftData& rhs);
+  /*!
+  * Assignment operator
+  * @param rhs Right hand side
+  * @return pointer of this object
+  */
+  SiftData& operator=(const SiftData& rhs);
 
-    std::vector<cv::KeyPoint>& getKeyPoints(void);
-    cv::Mat& getDescriptor(void);
+  /** Get reference of keypoints
+   * @return Reference of keypoints.
+   */
+  std::vector<cv::KeyPoint>& getKeyPoints(void);
 
-    void setSiftParams(double_t num_features, double_t octave_layers,
-                           double_t constrast_threshold, double_t edge_threshold,
-                           double_t sigma);
-    double_t getNumFeatures(void) const;
-    double_t getOctaveLayers(void) const;
-    double_t getContrastThreshold(void) const;
-    double_t getEdgeThreshold(void) const;
-    double_t getSigma(void) const;
+  /** Get SIFT feature vector.
+   * @return Reference of feature vector.
+   */
+  cv::Mat& getDescriptor(void);
 
-    void build(void);
-    bool isBuilded(void) const;
+  /** Set SIFT Parameters for detection and extraction.
+   * @param num_features Number of detecting feature.
+   * @param octave_layers Octave layers
+   * @param constrast_threshold Threshold for removing keypoints besed on contrast.
+   * @param edge_threshold Threshold for removing keypoints whether a point is on edge.
+   * @param sigma Gaussian step for generating pyramid images.
+   */
+  void setSiftParams(double_t num_features, double_t octave_layers,
+                     double_t constrast_threshold, double_t edge_threshold,
+                     double_t sigma);
 
-private:
-    cv::Mat &m_image;
-    std::vector<cv::KeyPoint> m_keypoints;
-    cv::Mat m_descriptor;
+  /** Get SIFT parameter, number of detecting features.
+   * @return Number of detecting features.
+   */
+  double_t getNumFeatures(void) const;
 
-    double_t m_num_features;
-    double_t m_octave_layers;
-    double_t m_contrast_threshold;
-    double_t m_edge_threshold;
-    double_t m_sigma;
+  /** Get SIFT parameter, octave layers
+   * @return Octave layers
+   */
+  double_t getOctaveLayers(void) const;
 
-    bool is_builded;
+  /** Get SIFT paramter, contrast threshold 
+   * @return Contrast threshold
+   */
+  double_t getContrastThreshold(void) const;
+
+  /** Get SIFT parameter, edge threshold
+   * @return Edge threshold
+   */
+  double_t getEdgeThreshold(void) const;
+
+  /** Get SIFT parameter, Gaussian step for generating pyramid images.
+   * @return Gaussian step.
+   */
+  double_t getSigma(void) const;
+
+  /** Build SIFT and run detection and extration
+   */
+  void build(void);
+
+  /** Whether SIFT is builed.
+   * @return true : builed, false : not builded.
+   */
+  bool isBuilded(void) const;
+
+
+ private:
+  cv::Mat &m_image;                     /**< Image for detecting SIFT features */
+  std::vector<cv::KeyPoint> m_keypoints; /**< SIFT keypoints */
+  cv::Mat m_descriptor;                 /**< SIFT feature vectors */
+
+  double_t m_num_features;              /**< SIFT param, number of detecting features. */
+  double_t m_octave_layers;             /**< SIFT param, octave layers. */
+  double_t m_contrast_threshold;        /**< SIFT param, contrast threshold for removing noisy keypoints. */
+  double_t m_edge_threshold;            /**< SIFT param, edge threshold for removing keypoints which are on edges. */
+  double_t m_sigma;                     /**< SIFT param, gaussian step */
+
+  bool is_builded;                      /**< Flag for indicating builded */
 };
 
 /*!
@@ -84,4 +129,4 @@ google::LogMessage& operator<<(google::LogMessage& lhs, const SiftData& rhs);
 }  // namespace cvgraphcut_base
 
 
-#endif  // _HOME_TAKAYAMAN_DOCUMENTS_PROGRAMMING_OPENCV_CVGRAPHCUT_CVGRAPHCUT_SIFTDATA_H_
+#endif  // CVGRAPHCUT_CVGRAPHCUT_SIFTDATA_H_

@@ -27,48 +27,48 @@ namespace cvgraphcut_base {
 class Vertex;
 
 class Edge {
-public:
-    /*!
-    * Defoult constructor
-    */
-    Edge(void);
+ public:
+  /*!
+  * Defoult constructor
+  */
+  Edge(void);
 
-    Edge(Vertex *startvertex, Vertex *endvertex, double size);
+  Edge(Vertex *startvertex, Vertex *endvertex, double size);
 
-    /*!
-    * Default destructor
-    */
-    ~Edge(void);
+  /*!
+  * Default destructor
+  */
+  ~Edge(void);
 
-    /*!
-    * Copy constructor
-    */
-    Edge(const Edge& rhs);
+  /*!
+  * Copy constructor
+  */
+  Edge(const Edge& rhs);
 
-    /*!
-    * Assignment operator
-    * @param rhs Right hand side
-    * @return pointer of this object
-    */
-    Edge& operator=(const Edge& rhs);
+  /*!
+  * Assignment operator
+  * @param rhs Right hand side
+  * @return pointer of this object
+  */
+  Edge& operator=(const Edge& rhs);
 
-    double addFlow(double flow);
-    void setFlow(double flow);
-    double getFlow(void) const;
+  double addFlow(double flow);
+  void setFlow(double flow);
+  double getFlow(void) const;
 
-    void setReverseEdge(Edge* reverseedge);
-    Edge* getReverseEdge(void) const;
-    double getSize(void) const;
+  void setReverseEdge(Edge* reverseedge);
+  Edge* getReverseEdge(void) const;
+  double getSize(void) const;
 
 
-public:
-    Vertex* m_startvertex;
-    Vertex* m_endvertex;
+ public:
+  Vertex* m_startvertex;
+  Vertex* m_endvertex;
 
-private:
-    Edge* m_reverseedge;
-    double m_flow;
-    double m_size;
+ private:
+  Edge* m_reverseedge;
+  double m_flow;
+  double m_size;
 
 };
 

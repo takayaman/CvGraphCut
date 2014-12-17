@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <glog/logging.h>
 
+
 /*=== Local Define / Local Const ============================================*/
 
 /*=== Class Implementation ==================================================*/
@@ -33,12 +34,15 @@ Util::~Util(void) {
 
 
 /*--- Operation -------------------------------------------------------------*/
+/* テンプレート化してutil.hに移動
 double_t Util::calcDistance(cv::Point2f point0, cv::Point2f point1) {
     double_t diff_X2 = pow(fabs(point0.x - point1.x), 2.0);
     double_t diff_Y2 = pow(fabs(point0.y - point1.y), 2.0);
     return sqrt(diff_X2 + diff_Y2);
 }
+*/
 
+/* テンプレート化してutil.hに移動
 double_t Util::calcL2NormOfVectors(const cv::Mat &fvector0, const cv::Mat &fvector1, bool aside_cols) {
     double_t l2_norm = 0.0;
     if(aside_cols) {
@@ -50,6 +54,7 @@ double_t Util::calcL2NormOfVectors(const cv::Mat &fvector0, const cv::Mat &fvect
     }
     return sqrt(l2_norm);
 }
+*/
 
 /*--- Accessor --------------------------------------------------------------*/
 

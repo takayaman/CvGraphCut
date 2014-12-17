@@ -34,15 +34,15 @@ namespace cvgraphcut_base {
 
 /* Defoult constructor */
 SiftData::SiftData(cv::Mat &image)
-    : m_image(image),
-      m_descriptor(cv::Mat()),
-      m_num_features(DefNumFeatures),
-      m_octave_layers(DefOctaveLayers),
-      m_contrast_threshold(DefContrastThreshold),
-      m_edge_threshold(DefEdgeThreshold),
-      m_sigma(DefSigma),
-      is_builded(false) {
-    m_keypoints.clear();
+  : m_image(image),
+    m_descriptor(cv::Mat()),
+    m_num_features(DefNumFeatures),
+    m_octave_layers(DefOctaveLayers),
+    m_contrast_threshold(DefContrastThreshold),
+    m_edge_threshold(DefEdgeThreshold),
+    m_sigma(DefSigma),
+    is_builded(false) {
+  m_keypoints.clear();
 }
 
 /* Default destructor */
@@ -59,46 +59,46 @@ SiftData& SiftData::operator=(const SiftData& rhs) {
 
 /*--- Operation -------------------------------------------------------------*/
 void SiftData::build(void) {
-    if(m_image.empty()) {
-        LOG(ERROR) << "m_image is invalid!!" << std::endl;
-        return;
-    }
+  if(m_image.empty()) {
+    LOG(ERROR) << "m_image is invalid!!" << std::endl;
+    return;
+  }
 
-    cv::Ptr<Detector> p_siftdetector;
-    p_siftdetector = Detector::create(
-                m_num_features,
-                m_octave_layers,
-                m_contrast_threshold,
-                m_edge_threshold,
-                m_sigma);
-    p_siftdetector->detect(m_image, m_keypoints);
-    cv::Ptr<Extractor> p_siftextractor;
-    p_siftextractor = Extractor::create(
-                m_num_features,
-                m_octave_layers,
-                m_contrast_threshold,
-                m_edge_threshold,
-                m_sigma);
-    p_siftextractor->compute(m_image, m_keypoints, m_descriptor);
+  cv::Ptr<Detector> p_siftdetector;
+  p_siftdetector = Detector::create(
+                     m_num_features,
+                     m_octave_layers,
+                     m_contrast_threshold,
+                     m_edge_threshold,
+                     m_sigma);
+  p_siftdetector->detect(m_image, m_keypoints);
+  cv::Ptr<Extractor> p_siftextractor;
+  p_siftextractor = Extractor::create(
+                      m_num_features,
+                      m_octave_layers,
+                      m_contrast_threshold,
+                      m_edge_threshold,
+                      m_sigma);
+  p_siftextractor->compute(m_image, m_keypoints, m_descriptor);
 
-    is_builded = true;
+  is_builded = true;
 }
 
 /*  Log output operator */
 google::LogMessage& operator<<(google::LogMessage& lhs, const SiftData& rhs) {
   lhs.stream() << "cvgraphcut_base::Siftdata{" <<
-      // TODO(N.Takayama): implement out stream of memder data
-      "}" << std::endl;
+               // TODO(N.Takayama): implement out stream of memder data
+               "}" << std::endl;
   return lhs;
 }
 
 /*--- Accessor --------------------------------------------------------------*/
 std::vector<cv::KeyPoint>& SiftData::getKeyPoints(void) {
-    return m_keypoints;
+  return m_keypoints;
 }
 
 cv::Mat& SiftData::getDescriptor(void) {
-    return m_descriptor;
+  return m_descriptor;
 }
 
 void SiftData::setSiftParams(double_t num_features,
@@ -106,35 +106,35 @@ void SiftData::setSiftParams(double_t num_features,
                              double_t constrast_threshold,
                              double_t edge_threshold,
                              double_t sigma) {
-    m_num_features = num_features;
-    m_octave_layers = octave_layers;
-    m_contrast_threshold = constrast_threshold;
-    m_edge_threshold = edge_threshold;
-    m_sigma = sigma;
+  m_num_features = num_features;
+  m_octave_layers = octave_layers;
+  m_contrast_threshold = constrast_threshold;
+  m_edge_threshold = edge_threshold;
+  m_sigma = sigma;
 }
 
 double_t SiftData::getNumFeatures(void) const {
-    return m_num_features;
+  return m_num_features;
 }
 
 double_t SiftData::getOctaveLayers(void) const {
-    return m_octave_layers;
+  return m_octave_layers;
 }
 
 double_t SiftData::getContrastThreshold(void) const {
-    return m_contrast_threshold;
+  return m_contrast_threshold;
 }
 
 double_t SiftData::getEdgeThreshold(void) const {
-    return m_edge_threshold;
+  return m_edge_threshold;
 }
 
 double_t SiftData::getSigma(void) const {
-    return m_sigma;
+  return m_sigma;
 }
 
 bool SiftData::isBuilded(void) const {
-    return is_builded;
+  return is_builded;
 }
 
 /*--- Event -----------------------------------------------------------------*/

@@ -25,32 +25,30 @@ namespace cvgraphcut_base {
 
 /* Defoult constructor */
 Vertex::Vertex(void)
-    : m_parent(NULL),
-      m_parentpath(NULL),
-      m_point(cv::Point2d(0, 0)),
-      m_value(0.0),
-      is_visited(false)
-{
-    m_vectorflowpath.clear();
+  : m_parent(NULL),
+    m_parentpath(NULL),
+    m_point(cv::Point2d(0, 0)),
+    m_value(0.0),
+    is_visited(false) {
+  m_vectorflowpath.clear();
 }
 
 Vertex::Vertex(cv::Point2d point)
-    : m_parent(NULL),
-      m_parentpath(NULL),
-      m_point(point),
-      m_value(0.0),
-      is_visited(false)
-{
-    m_vectorflowpath.clear();
+  : m_parent(NULL),
+    m_parentpath(NULL),
+    m_point(point),
+    m_value(0.0),
+    is_visited(false) {
+  m_vectorflowpath.clear();
 }
 
 /* Default destructor */
 Vertex::~Vertex(void) {
-    while(!m_vectorflowpath.empty()){
-        if(NULL != m_vectorflowpath.back())
-            delete m_vectorflowpath.back();
-        m_vectorflowpath.pop_back();
-    }
+  while(!m_vectorflowpath.empty()) {
+    if(NULL != m_vectorflowpath.back())
+      delete m_vectorflowpath.back();
+    m_vectorflowpath.pop_back();
+  }
 }
 
 /*  Copy constructor */
@@ -65,72 +63,65 @@ Vertex& Vertex::operator=(const Vertex& rhs) {
   return *this;
 }
 
-bool Vertex::operator ==(Vertex& rhs){
-    return this->m_point == rhs.m_point;
+bool Vertex::operator ==(Vertex& rhs) {
+  return this->m_point == rhs.m_point;
 }
 
 /*--- Operation -------------------------------------------------------------*/
-void Vertex::addFlowPath(Vertex *endvertex, double size)
-{
-    Edge* forwardedge = new Edge(this, endvertex, size);
-    m_vectorflowpath.push_back(forwardedge);
-    Edge* reverseedge = new Edge(endvertex, this, -size);
-    reverseedge->setReverseEdge(forwardedge);
-    forwardedge->setReverseEdge(reverseedge);
-    endvertex->m_vectorflowpath.push_back(reverseedge);
+void Vertex::addFlowPath(Vertex *endvertex, double size) {
+  Edge* forwardedge = new Edge(this, endvertex, size);
+  m_vectorflowpath.push_back(forwardedge);
+  Edge* reverseedge = new Edge(endvertex, this, -size);
+  reverseedge->setReverseEdge(forwardedge);
+  forwardedge->setReverseEdge(reverseedge);
+  endvertex->m_vectorflowpath.push_back(reverseedge);
 }
 
-void Vertex::visit(void)
-{
-    is_visited = true;
+void Vertex::visit(void) {
+  is_visited = true;
 }
 
-void Vertex::reset(void)
-{
-    is_visited = false;
-    m_value = 0.0;
+void Vertex::reset(void) {
+  is_visited = false;
+  m_value = 0.0;
 }
 
 /*  Log output operator */
 google::LogMessage& operator<<(google::LogMessage& lhs, const Vertex& rhs) {
   lhs.stream() << "cvgraphcut_base::Vertex{" <<
-      // TODO(N.Takayama): implement out stream of memder data
-      "}" << std::endl;
+               // TODO(N.Takayama): implement out stream of memder data
+               "}" << std::endl;
   return lhs;
 }
 
 /*--- Accessor --------------------------------------------------------------*/
-void Vertex::setValue(double value)
-{
-    m_value = value;
+void Vertex::setValue(double value) {
+  m_value = value;
 }
 
-double Vertex::getValue(void)
-{
-    return m_value;
+double Vertex::getValue(void) {
+  return m_value;
 }
 
-void Vertex::setPoint(cv::Point2d point)
-{
-    m_point = point;
+void Vertex::setPoint(cv::Point2d point) {
+  m_point = point;
 }
 
-bool Vertex::isVisited(void)
-{
-    return is_visited;
+bool Vertex::isVisited(void) {
+  return is_visited;
 }
 
 bool Vertex::isHere(cv::Point2d point) {
-    return m_point == point;
+  return m_point == point;
 }
 
 
 void Vertex::setVertexType(VertexType type) {
-    m_vertextype = type;
+  m_vertextype = type;
 }
 
-Vertex::VertexType Vertex::getVertexType(void){
-    return m_vertextype;
+Vertex::VertexType Vertex::getVertexType(void) {
+  return m_vertextype;
 }
 
 

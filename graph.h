@@ -26,45 +26,45 @@ namespace cvgraphcut_base {
 
 
 class Graph {
-public:
-    /*!
-    * Defoult constructor
-    */
-    Graph(void);
+ public:
+  /*!
+  * Defoult constructor
+  */
+  Graph(void);
 
-    /*!
-    * Default destructor
-    */
-    ~Graph(void);
+  /*!
+  * Default destructor
+  */
+  ~Graph(void);
 
-    /*!
-    * Copy constructor
-    */
-    Graph(const Graph& rhs);
+  /*!
+  * Copy constructor
+  */
+  Graph(const Graph& rhs);
 
-    /*!
-    * Assignment operator
-    * @param rhs Right hand side
-    * @return pointer of this object
-    */
-    Graph& operator=(const Graph& rhs);
+  /*!
+  * Assignment operator
+  * @param rhs Right hand side
+  * @return pointer of this object
+  */
+  Graph& operator=(const Graph& rhs);
 
-    void reset(void);
-    Vertex* addVertex(cv::Point2d point, Vertex::VertexType type);
-    bool addFlowPath(Vertex *startvertex, Vertex *endvertex, double value);
+  void reset(void);
+  Vertex* addVertex(cv::Point2d point, Vertex::VertexType type);
+  bool addFlowPath(Vertex *startvertex, Vertex *endvertex, double value);
 
-    bool searchMaxFlow(void);
-    bool flowFirstSearch(void);
-    void searchMinCut(Vertex *source);
-    void displayMinCut(void);
+  bool searchMaxFlow(void);
+  bool flowFirstSearch(void);
+  void searchMinCut(Vertex *source);
+  void displayMinCut(void);
 
-    Vertex* getVertexAt(cv::Point2d point);
+  Vertex* getVertexAt(cv::Point2d point);
 
-public:
-    std::vector<Vertex*> m_vertexes;
-    std::vector<Vertex*> m_mincut;
-    Vertex* m_source;
-    Vertex* m_sink;
+ public:
+  std::vector<Vertex*> m_vertexes;
+  std::vector<Vertex*> m_mincut;
+  Vertex* m_source;
+  Vertex* m_sink;
 };
 
 /*!

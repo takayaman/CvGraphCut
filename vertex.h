@@ -29,70 +29,70 @@ namespace cvgraphcut_base {
 class Edge;
 
 class Vertex {
-public:
-    typedef enum VertexType_TAG {
-        TYPE_DEFAULT = 0,
-        TYPE_NEUTRAL = TYPE_DEFAULT,
-        TYPE_SINK,
-        TYPE_SOURCE,
-        TYPE_NUM,
-    }VertexType;
+ public:
+  typedef enum VertexType_TAG {
+    TYPE_DEFAULT = 0,
+    TYPE_NEUTRAL = TYPE_DEFAULT,
+    TYPE_SINK,
+    TYPE_SOURCE,
+    TYPE_NUM,
+  } VertexType;
 
-    /*!
-    * Defoult constructor
-    */
-    Vertex(void);
+  /*!
+  * Defoult constructor
+  */
+  Vertex(void);
 
-    Vertex(cv::Point2d point);
+  Vertex(cv::Point2d point);
 
-    /*!
-    * Default destructor
-    */
-    ~Vertex(void);
+  /*!
+  * Default destructor
+  */
+  ~Vertex(void);
 
-    /*!
-    * Copy constructor
-    */
-    Vertex(const Vertex& rhs);
+  /*!
+  * Copy constructor
+  */
+  Vertex(const Vertex& rhs);
 
-    /*!
-    * Assignment operator
-    * @param rhs Right hand side
-    * @return pointer of this object
-    */
-    Vertex& operator=(const Vertex& rhs);
+  /*!
+  * Assignment operator
+  * @param rhs Right hand side
+  * @return pointer of this object
+  */
+  Vertex& operator=(const Vertex& rhs);
 
-    bool operator ==(Vertex& rhs);
+  bool operator ==(Vertex& rhs);
 
-    /*! 自身を始点として終点との間に双方向エッジを張り,容量を設定する
-    * ここで,始点->終点のエッジ容量 : size
-    * 終点->始点のエッジ容量 : -size
-    */
-    void addFlowPath(Vertex *endvertex, double size);
-    void visit(void);
-    void reset(void);
+  /*! 自身を始点として終点との間に双方向エッジを張り,容量を設定する
+  * ここで,始点->終点のエッジ容量 : size
+  * 終点->始点のエッジ容量 : -size
+  */
+  void addFlowPath(Vertex *endvertex, double size);
+  void visit(void);
+  void reset(void);
 
-    void setValue(double value);
-    double getValue(void);
-    void setPoint(cv::Point2d point);
+  void setValue(double value);
+  double getValue(void);
+  void setPoint(cv::Point2d point);
 
-    bool isVisited(void);
-    bool isHere(cv::Point2d point);
+  bool isVisited(void);
+  bool isHere(cv::Point2d point);
 
-    void setVertexType(VertexType type);
-    VertexType getVertexType(void);
+  void setVertexType(VertexType type);
+  VertexType getVertexType(void);
 
-public:
-    std::vector<Edge*> m_vectorflowpath;
-    Vertex* m_parent;
-    Edge* m_parentpath;
-    cv::Point2d m_point;
+ public:
+  std::vector<Edge*> m_vectorflowpath;
+  Vertex* m_parent;
+  Edge* m_parentpath;
+  cv::Point2d m_point;
 
 
-private:
-    double m_value;
-    bool is_visited;
-    VertexType m_vertextype;
+ private:
+  double m_value;
+  bool is_visited;
+  VertexType m_vertextype;
 
 };
 

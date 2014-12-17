@@ -8,8 +8,8 @@
  * Build sift matching datas
  *===========================================================================*/
 
-#ifndef _HOME_TAKAYAMAN_DOCUMENTS_PROGRAMMING_OPENCV_CVGRAPHCUT_CVGRAPHCUT_SIFTMATCHER_H_
-#define _HOME_TAKAYAMAN_DOCUMENTS_PROGRAMMING_OPENCV_CVGRAPHCUT_CVGRAPHCUT_SIFTMATCHER_H_
+#ifndef CVGRAPHCUT_CVGRAPHCUT_SIFTMATCHER_H_
+#define CVGRAPHCUT_CVGRAPHCUT_SIFTMATCHER_H_
 
 /*=== Include ===============================================================*/
 
@@ -19,8 +19,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
 
-#include "siftdata.h"
-#include "siftmatchpare.h"
+#include "./siftdata.h"
+#include "./siftmatchpare.h"
 
 /*=== Define ================================================================*/
 
@@ -29,38 +29,47 @@
 namespace cvgraphcut_base {
 
 class SiftMatcher {
-public:
-    /*!
-    * Defoult constructor
-    */
-    SiftMatcher(SiftData &source_data, SiftData &destination_data);
+ public:
+  /** Constructor
+   * @param source_data Source SiftData for matching.
+   * @param destination_data Destination SiftData for matching.
+   */
+  SiftMatcher(const SiftData &source_data, const SiftData &destination_data);
 
-    /*!
-    * Default destructor
-    */
-    ~SiftMatcher(void);
+  /**  Default destructor
+  */
+  ~SiftMatcher(void);
 
-    /*!
-    * Assignment operator
-    * @param rhs Right hand side
-    * @return pointer of this object
-    */
-    SiftMatcher& operator=(const SiftMatcher& rhs);
+  /**
+  * Assignment operator
+  * @param rhs Right hand side
+  * @return pointer of this object
+  */
+  SiftMatcher& operator=(const SiftMatcher& rhs);
 
-    void matching(void);
+  /** Run SIFT matching algorithms.
+   */
+  void matching(void);
 
-    std::vector<std::vector<SiftMatchPare> >& getMatchGroups(void);
-    bool isBuildMatchGroups(void);
+  /** Get result of matching.
+   * @return result of matching.
+   */
+  std::vector<std::vector<SiftMatchPare> >& getMatchGroups(void);
 
-private:
-    SiftData &m_source_data;
-    SiftData &m_destination_data;
+  /** Whether matching result is outputted.
+   * @return true : build, false : not build.
+   */
+  bool isBuildMatchGroups(void);
 
-    std::vector<std::vector<SiftMatchPare> > m_match_groups;
-    std::vector<bool> m_match_flags0;
-    std::vector<bool> m_match_flags1;
+ private:
+  SiftData &m_source_data;              /**< Source SiftData for matching */
+  SiftData &m_destination_data;         /**< Destination SiftData for matching */
 
-    bool is_buildmatchgroups;
+  std::vector<std::vector<SiftMatchPare> > m_match_groups; /**< Matching result */
+  std::vector<bool> m_match_flags0;     /**< UNUSED */
+  std::vector<bool> m_match_flags1;     /**< UNUSED */
+
+  bool is_buildmatchgroups;             /**< Flag to indicate matching is runned. */
 
 };
 
@@ -75,4 +84,4 @@ google::LogMessage& operator<<(google::LogMessage& lhs, const SiftMatcher& rhs);
 }  // namespace cvgraphcut_base
 
 
-#endif  // _HOME_TAKAYAMAN_DOCUMENTS_PROGRAMMING_OPENCV_CVGRAPHCUT_CVGRAPHCUT_SIFTMATCHER_H_
+#endif  // CVGRAPHCUT_CVGRAPHCUT_SIFTMATCHER_H_
