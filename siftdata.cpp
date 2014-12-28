@@ -72,6 +72,17 @@ void SiftData::build(void) {
                      m_edge_threshold,
                      m_sigma);
   p_siftdetector->detect(m_image, m_keypoints);
+  /* 同一座標の特徴点があった場合はノイズを付加する */
+  for(size_t i = 0; i < m_keypoints.size() - 1; i++){
+      cv::KeyPoint *key0 = &m_keypoints[i];
+      for(size_t j = i + 1; j < m_keypoints.size(); j++){
+          cv::KeyPoint *key1 = &m_keypoints[j];
+          if(key0->pt == key1->pt){
+              key1->pt += cv::Point2f(0.1, 0.1);
+          }
+      }
+  }
+
   cv::Ptr<Extractor> p_siftextractor;
   p_siftextractor = Extractor::create(
                       m_num_features,

@@ -68,12 +68,9 @@ namespace cvgraphcut_base {
 class Gmm {
  public:
   static const int32_t kComponentsCount = 5;
-  static const int32_t kMeanSize = 3;
-  static const int32_t kCovarianceSize = 9;
-  static const int32_t kComponentWeightSize = 1;
+  static const int32_t kVectorSize = 128;
 
-  typedef cv::Vec<double_t, kMeanSize> MeanData;
-  typedef cv::Vec<double_t, kCovarianceSize> CoVarianceData;
+  typedef cv::Vec<double_t, kVectorSize> MeanData;
 
   /*!
   * Defoult constructor
@@ -85,56 +82,57 @@ class Gmm {
   */
   ~Gmm(void);
 
-  /*!
-  * Copy constructor
-  */
-  Gmm(const Gmm& rhs);
-
-  /*!
-  * Assignment operator
-  * @param rhs Right hand side
-  * @return pointer of this object
-  */
-  Gmm& operator=(const Gmm& rhs);
-
   double_t operator ()(const cv::Vec3d color) const;
+  double_t operator ()(const cv::Mat &vector) const;
   double_t operator ()(int32_t index_component, const cv::Vec3d color) const;
+  double_t operator ()(int32_t index_component, const cv::Mat &vector) const;
+
+  double_t calcMinDistance(const cv::Mat& vector) const;
 
   int32_t whichComponent(const cv::Vec3d color) const;
+  int32_t whichComponent(const cv::Mat& vector) const;
+
 
   /* ガウス変数計算用のメンバを初期化 */
   void initLearning(void);
+
   /* 色値を基にガウス変数を計算 */
   void addSample(int32_t index_component, const cv::Vec3d color);
+  void addSample(int32_t index_component, const cv::Mat& vector);
+
   /* addSample()の計算値をガウス変数に反映 */
   void endLearning(void);
 
- private:
-  void init(void);
-  void calcInverseCovAndDeterm(int32_t index_component);
-  double_t calcLikelihoodInComponent(int32_t index_component, const cv::Vec3d color) const;
-  double_t calcSumOfLikelihood(const cv::Vec3d color) const;
+  void debugPrintMembers(void);
+
 
  private:
-  /* 学習用モデルデータ */
-  // cv::Mat m_model;
+  void init(void);
+
+  void calcInverseCovAndDeterm(int32_t index_component);
+  double_t calcLikelihoodInComponent(int32_t index_component, const cv::Mat &vector) const;
+  double_t calcSumOfLikelihood(const cv::Mat &vector) const;
+
+ private:
 
   /* ガウス分布間の相対係数 */
   std::vector<double_t> m_coefficients;
   /* 平均値 */
-  std::vector<MeanData> m_means;
+  std::vector<cv::Mat> m_centroids;
+  std::vector<MeanData> m_vectormeans;
+  std::vector<MeanData> m_vectorsums;
+
   /* 共分散 */
-  std::vector<CoVarianceData> m_covariants;
+  std::vector<cv::Mat> m_covariant_matrices;
 
   /* 逆行列の共分散 */
-  double_t m_inverse_covariants[kComponentsCount][3][3];
-  /* 行列式 */
-  double_t m_covariant_Determinants[kComponentsCount];
+  std::vector<cv::Mat> m_inverse_covariant_matrices;
 
-  /* データの合計値 */
-  double_t m_sums[kComponentsCount][3];
+  /* 行列式 */
+  std::vector<double_t> m_covariant_determinants;
+
   /* データの積 */
-  double_t m_products[kComponentsCount][3][3];
+  std::vector<cv::Mat> m_product_matrices;
 
   /* ガウス分布毎のデータ数 */
   int32_t m_samplecounts[kComponentsCount];

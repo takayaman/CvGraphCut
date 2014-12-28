@@ -16,23 +16,23 @@ HEADERS += \
     vertex.h \
     graph.h \
     edge.h \
-    gmm.h \
     gcgraph.h \
     siftmatcher.h \
     siftgraphbuilder.h \
     siftmatchpare.h \
     siftdata.h \
-    util.h
+    util.h \
+    gmm.h
 
 SOURCES += \
     vertex.cpp \
     graph.cpp \
     edge.cpp \
-    gmm.cpp \
     gcgraph.cpp \
     siftmatcher.cpp \
     siftgraphbuilder.cpp \
     siftmatchpare.cpp \
     siftdata.cpp \
     util.cpp \
-    main.cpp
+    main.cpp \
+    gmm.cpp

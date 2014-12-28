@@ -35,7 +35,7 @@ class SiftData {
   /** Constructor
    * @param image Image for extract SIFT
    */
-  explicit SiftData(const cv::Mat &image);
+  explicit SiftData(cv::Mat &image);
 
   /** Default destructor
    */

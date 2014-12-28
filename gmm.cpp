@@ -55,6 +55,9 @@
 #include <stdint.h>
 #include <glog/logging.h>
 
+#include <fstream>
+#include "util.h"
+
 /*=== Local Define / Local Const ============================================*/
 
 /*=== Class Implementation ==================================================*/
@@ -73,55 +76,57 @@ Gmm::Gmm(void)
 Gmm::~Gmm(void) {
 }
 
-/*  Copy constructor */
-Gmm::Gmm(const Gmm& rhs) {
-}
-
-/* Assignment operator */
-Gmm& Gmm::operator=(const Gmm& rhs) {
-  if (this != &rhs) {
-    // TODO(N.Takayama): implement copy
-  }
-  return *this;
-}
-
 double_t Gmm::operator ()(const cv::Vec3d color) const {
-  return calcSumOfLikelihood(color);
+  cv::Mat vector = cv::Mat(1, kVectorSize, CV_64FC1);
+  for(int32_t i = 0; i < kVectorSize; i++)
+    vector.at<double_t>(0, i) = color.val[i];
+  return calcSumOfLikelihood(vector);
 }
 
 double_t Gmm::operator ()(int32_t index_component, const cv::Vec3d color) const {
-  return calcLikelihoodInComponent(index_component, color);
+  cv::Mat vector = cv::Mat(1, kVectorSize, CV_64FC1);
+  for(int32_t i = 0; i < kVectorSize; i++)
+    vector.at<double_t>(0, i) = color.val[i];
+  return calcLikelihoodInComponent(index_component, vector);
+}
+
+double_t Gmm::operator ()(const cv::Mat &vector) const {
+  return calcSumOfLikelihood(vector);
+}
+
+
+double_t Gmm::operator ()(int32_t index_component, const cv::Mat &vector) const {
+  return calcLikelihoodInComponent(index_component, vector);
 }
 
 void Gmm::init(void) {
   m_coefficients.resize(kComponentsCount);
-  m_means.resize(kComponentsCount);
-  m_covariants.resize(kComponentsCount);
+  m_covariant_matrices.resize(kComponentsCount);
+  m_inverse_covariant_matrices.resize(kComponentsCount);
+  m_covariant_determinants.resize(kComponentsCount);
+  m_product_matrices.resize(kComponentsCount);
+  m_vectormeans.resize(kComponentsCount);
+  m_vectorsums.resize(kComponentsCount);
+  m_centroids.resize(kComponentsCount);
   for(int32_t i = 0; i < kComponentsCount; i++) {
     m_coefficients[i] = 0.0;
-    m_means[i] = cv::Vec<double_t, kMeanSize>(0.0);
-    m_covariants[i] = cv::Vec<double_t, kCovarianceSize>(0.0);
-
-    m_inverse_covariants[i][0][0] = m_inverse_covariants[i][0][1] = m_inverse_covariants[i][0][2] = 0.0;
-    m_inverse_covariants[i][1][0] = m_inverse_covariants[i][1][1] = m_inverse_covariants[i][1][2] = 0.0;
-    m_inverse_covariants[i][2][0] = m_inverse_covariants[i][2][1] = m_inverse_covariants[i][1][2] = 0.0;
-
-    m_covariant_Determinants[i] = 0;
-    m_sums[i][0] = m_sums[i][1] = m_sums[i][2] = 0.0;
-    m_products[i][0][0] = m_products[i][0][1] = m_products[i][0][2] = 0.0;
-    m_products[i][1][0] = m_products[i][1][1] = m_products[i][1][2] = 0.0;
-    m_products[i][2][0] = m_products[i][2][1] = m_products[i][1][2] = 0.0;
+    m_covariant_matrices[i] = cv::Mat::zeros(kVectorSize, kVectorSize, CV_64FC1);
+    m_inverse_covariant_matrices[i] = cv::Mat::zeros(kVectorSize, kVectorSize, CV_64FC1);
+    m_covariant_determinants[i] = 0;
+    m_product_matrices[i] = cv::Mat::zeros(kVectorSize, kVectorSize, CV_64FC1);
     m_samplecounts[i] = 0;
+    m_vectormeans[i] = MeanData(0, 0);
+    m_vectorsums[i] = MeanData(0, 0);
+    m_centroids[i] = cv::Mat::zeros(1, kVectorSize, CV_64FC1);
   }
 }
 
 void Gmm::initLearning(void) {
-  for(int32_t index_components = 0; index_components < kComponentsCount; index_components++ ) {
-    m_sums[index_components][0] = m_sums[index_components][1] = m_sums[index_components][2] = 0;
-    m_products[index_components][0][0] = m_products[index_components][0][1] = m_products[index_components][0][2] = 0;
-    m_products[index_components][1][0] = m_products[index_components][1][1] = m_products[index_components][1][2] = 0;
-    m_products[index_components][2][0] = m_products[index_components][2][1] = m_products[index_components][2][2] = 0;
+  for(int32_t index_components = 0; index_components < kComponentsCount; index_components++) {
+    m_product_matrices[index_components] = cv::Mat::zeros(kVectorSize, kVectorSize, CV_64FC1);
     m_samplecounts[index_components] = 0;
+    m_vectorsums[index_components] = MeanData(0, 0);
+    m_centroids[index_components] = cv::Mat::zeros(1, kVectorSize, CV_64FC1);
   }
   m_totalsamplecount = 0;
 }
@@ -130,102 +135,174 @@ void Gmm::endLearning(void) {
   const double_t variance = 0.01;
   for(int32_t index_component = 0; index_component < kComponentsCount; index_component++) {
     double_t samplecount = static_cast<double_t>(m_samplecounts[index_component]);
-
     if(0 == samplecount)
       m_coefficients[index_component] = 0.0;
     else {
       m_coefficients[index_component] = samplecount / static_cast<double_t>(m_totalsamplecount);
-
-      MeanData &mean = m_means.at(index_component);
-      mean[0] = m_sums[index_component][0] / samplecount;
-      mean[1] = m_sums[index_component][1] / samplecount;
-      mean[2] = m_sums[index_component][2] / samplecount;
-
-      CoVarianceData &covariance = m_covariants.at(index_component);
-      covariance[0] = m_products[index_component][0][0] / samplecount - mean[0] * mean[0];
-      covariance[1] = m_products[index_component][0][1] / samplecount - mean[0] * mean[1];
-      covariance[2] = m_products[index_component][0][2] / samplecount - mean[0] * mean[2];
-      covariance[3] = m_products[index_component][1][0] / samplecount - mean[1] * mean[0];
-      covariance[4] = m_products[index_component][1][1] / samplecount - mean[1] * mean[1];
-      covariance[5] = m_products[index_component][1][2] / samplecount - mean[1] * mean[2];
-      covariance[6] = m_products[index_component][2][0] / samplecount - mean[2] * mean[0];
-      covariance[7] = m_products[index_component][2][1] / samplecount - mean[2] * mean[1];
-      covariance[8] = m_products[index_component][2][2] / samplecount - mean[2] * mean[2];
-
-      double_t determinant = covariance[0] * (covariance[4] * covariance[8] - covariance[5] * covariance[7]) \
-                             - covariance[1] * (covariance[3] * covariance[8] - covariance[5] * covariance[6]) \
-                             + covariance[2] * (covariance[3] * covariance[7] - covariance[4] * covariance[6]);
-      if(std::numeric_limits<double_t>::epsilon() >=  determinant) {
-        covariance[0] += variance;
-        covariance[4] += variance;
-        covariance[8] += variance;
-      }
-      calcInverseCovAndDeterm(index_component);
     }
+
+    //MeanData &mean = m_vectormeans.at(index_component);
+    //for(int32_t i = 0; i < mean.channels; i++)
+    //    mean[i] = m_vectorsums[index_component][i] / samplecount;
+    for(int32_t i = 0; i < m_vectormeans[index_component].channels; i++) {
+      m_vectormeans[index_component][i] = m_vectorsums[index_component][i] / samplecount;
+      m_centroids[index_component].at<double_t>(0, i) = m_vectormeans[index_component][i]; // centroid == vectormeans
+    }
+
+    for(int32_t i = 0; i < m_covariant_matrices[index_component].rows; i++)
+      for(int32_t j = 0; j < m_covariant_matrices[index_component].cols; j++) {
+        //double_t meanproduct = mean.val[i] * mean.val[j];
+        double_t meanproduct = m_vectormeans[index_component][i] * m_vectormeans[index_component][j];
+        m_covariant_matrices[index_component].at<double_t>(i, j) = m_product_matrices[index_component].at<double_t>(i, j) / samplecount - meanproduct;
+      }
+    double_t determinant = cv::determinant(m_covariant_matrices[index_component]);
+    //if(std::numeric_limits<double_t>::epsilon() >= determinant) {
+    //  for(int32_t i = 0; i < m_covariant_matrices[index_component].rows; i++)
+    //    m_covariant_matrices[index_component].at<double_t>(i, i) += variance;
+    //}
+    double_t totalvaliance = 0.0;
+    while(std::numeric_limits<double_t>::epsilon() >= determinant) {
+      for(int32_t i = 0; i < m_covariant_matrices[index_component].rows; i++)
+        m_covariant_matrices[index_component].at<double_t>(i, i) += variance;
+      determinant = cv::determinant(m_covariant_matrices[index_component]);
+      totalvaliance += variance;
+    }
+    //debugPrintMembers();
+    LOG(INFO) << "Index : " << index_component << "TotalVariance : " << totalvaliance << std::endl;
+    calcInverseCovAndDeterm(index_component);
   }
 }
 
 /*--- Operation -------------------------------------------------------------*/
 void Gmm::addSample(int32_t index_component, const cv::Vec3d color) {
-  m_sums[index_component][0] += color[0];
-  m_sums[index_component][1] += color[1];
-  m_sums[index_component][2] += color[2];
-  m_products[index_component][0][0] += color[0] * color[0];
-  m_products[index_component][0][1] += color[0] * color[1];
-  m_products[index_component][0][2] += color[0] * color[2];
-  m_products[index_component][1][0] += color[1] * color[0];
-  m_products[index_component][1][1] += color[1] * color[1];
-  m_products[index_component][1][2] += color[1] * color[2];
-  m_products[index_component][2][0] += color[2] * color[0];
-  m_products[index_component][2][1] += color[2] * color[1];
-  m_products[index_component][2][2] += color[2] * color[2];
+  cv::Mat vector = cv::Mat(1, kVectorSize, CV_64FC1);
+  for(int32_t i = 0; i < kVectorSize; i++)
+    vector.at<double_t>(0, i) = color.val[i];
+  addSample(index_component, vector);
+}
+
+void Gmm::addSample(int32_t index_component, const cv::Mat& vector) {
+  if(m_product_matrices[index_component].cols != vector.cols) {
+    LOG(ERROR) << "vector.rows must be equal to m_product_matrices[index_component].rows" << std::endl;
+    return;
+  }
+  for(int32_t i = 0; i < m_product_matrices[index_component].rows; i++)
+    for(int32_t j = 0; j < m_product_matrices[index_component].cols; j++) {
+      double_t product = vector.at<double_t>(0, i) * vector.at<double_t>(0, j);
+      m_product_matrices[index_component].at<double_t>(i, j) += product;
+    }
+  for(int32_t i = 0; i < m_vectorsums[index_component].channels; i++) {
+    m_vectorsums[index_component][i] += vector.at<double_t>(0, i);
+  }
   m_samplecounts[index_component]++;
   m_totalsamplecount++;
 }
 
 void Gmm::calcInverseCovAndDeterm(int32_t index_component) {
-  if (0 < m_coefficients[index_component]) {
-    CoVarianceData covariance = m_covariants.at(index_component);
-    double_t determinant = covariance[0] * (covariance[4] * covariance[8] - covariance[5] * covariance[7]) \
-                           - covariance[1] * (covariance[3] * covariance[8] - covariance[5] * covariance[6]) \
-                           + covariance[2] * (covariance[3] * covariance[7] - covariance[4] * covariance[6]);
-    m_covariant_Determinants[index_component] = determinant;
+  if(0 < m_coefficients[index_component]) {
+    double_t determinant = cv::determinant(m_covariant_matrices[index_component]);
+    m_covariant_determinants[index_component] = determinant;
     CV_Assert(std::numeric_limits<double_t>::epsilon() < determinant);
-    m_inverse_covariants[index_component][0][0] = (covariance[4] * covariance[8] - covariance[5] * covariance[7]) / determinant;
-    m_inverse_covariants[index_component][1][0] = (covariance[3] * covariance[8] - covariance[5] * covariance[6]) / determinant;
-    m_inverse_covariants[index_component][2][0] = (covariance[3] * covariance[7] - covariance[4] * covariance[6]) / determinant;
-    m_inverse_covariants[index_component][0][1] = (covariance[1] * covariance[8] - covariance[2] * covariance[7]) / determinant;
-    m_inverse_covariants[index_component][1][1] = (covariance[0] * covariance[8] - covariance[2] * covariance[6]) / determinant;
-    m_inverse_covariants[index_component][2][1] = (covariance[0] * covariance[7] - covariance[1] * covariance[6]) / determinant;
-    m_inverse_covariants[index_component][0][2] = (covariance[1] * covariance[5] - covariance[2] * covariance[4]) / determinant;
-    m_inverse_covariants[index_component][1][2] = (covariance[0] * covariance[5] - covariance[2] * covariance[3]) / determinant;
-    m_inverse_covariants[index_component][2][2] = (covariance[0] * covariance[4] - covariance[1] * covariance[3]) / determinant;
+    m_inverse_covariant_matrices[index_component] = m_covariant_matrices[index_component].inv();
   }
 }
 
-double_t Gmm::calcLikelihoodInComponent(int32_t index_component, const cv::Vec3d color) const {
+double_t Gmm::calcMinDistance(const cv::Mat &vector) const {
+  double_t mindistance = DBL_MAX;
+  for(int32_t i = 0; i < kComponentsCount; i++) {
+    double_t distance = Util::calcL2NormOfVectors<double_t>(vector, m_centroids.at(i), true);
+    if(mindistance > distance) {
+      mindistance = distance;
+    }
+  }
+  return mindistance;
+}
+
+double_t Gmm::calcLikelihoodInComponent(int32_t index_component, const cv::Mat &vector) const {
   double_t likelihood = 0.0;
   if(0 < m_coefficients[index_component]) {
-    CV_Assert(std::numeric_limits<double_t>::epsilon() < m_covariant_Determinants[index_component]);
-    cv::Vec3d diff = color;
-    MeanData mean = m_means.at(index_component);
-    diff[0] -= mean[0];
-    diff[1] -= mean[1];
-    diff[2] -= mean[2];
-    double_t multipication =
-      diff[0] * (diff[0] * m_inverse_covariants[index_component][0][0] + diff[1] * m_inverse_covariants[index_component][1][0] + diff[2] * m_inverse_covariants[index_component][2][0])
-      + diff[1] * (diff[0] * m_inverse_covariants[index_component][0][1] + diff[1] * m_inverse_covariants[index_component][1][1] + diff[2] * m_inverse_covariants[index_component][2][1])
-      + diff[2] * (diff[0] * m_inverse_covariants[index_component][0][2] + diff[1] * m_inverse_covariants[index_component][1][2] + diff[2] * m_inverse_covariants[index_component][2][2]);
-    likelihood = 1.0f / sqrt(m_covariant_Determinants[index_component]) * exp(-0.5f * multipication);
+    CV_Assert(std::numeric_limits<double_t>::epsilon() < m_covariant_determinants[index_component]);
+    cv::Mat diff = cv::Mat(1, kVectorSize, CV_64FC1);
+    cv::Mat mean = cv::Mat(1, kVectorSize, CV_64FC1);
+    cv::Mat vectord;
+    vector.convertTo(vectord, CV_64FC1);
+
+    //Util::logCvMatAsCvs<double_t>("vector.cvs", vector);
+    //Util::logCvMatAsCvs<double_t>("vectord.cvs", vectord);
+
+    for(int32_t i = 0; i < mean.cols; i++) {
+      mean.at<double_t>(0, i) = m_vectormeans[index_component][i];
+    }
+    CV_Assert(vector.cols == mean.cols);
+    diff = vectord - mean;
+
+    //Util::logCvMatAsCvs<double_t>("diff.cvs", diff);
+
+    cv::Mat diff_transposition = diff.t();
+    cv::Mat temp = diff * m_inverse_covariant_matrices[index_component];
+    temp = temp * diff_transposition;
+    double_t debug_det = m_covariant_determinants[index_component];
+    double_t debug_sqrtdet = sqrt(m_covariant_determinants[index_component]);
+    double_t debug_exp = exp(-0.5f * temp.at<double_t>(0, 0));
+    double_t debug_invlikelihood = sqrt(m_covariant_determinants[index_component]) * exp(-0.5f * temp.at<double_t>(0, 0));
+    likelihood = 1.0f / sqrt(m_covariant_determinants[index_component]) * exp(-0.5f * temp.at<double_t>(0, 0));
+
+    // debug print
+    LOG(INFO) << "IndexComponent : " << index_component << ", " << "temp : " << temp.at<double_t>(0, 0) << ", "
+              << "Determinant : " << debug_det << ", " << "SqrtDet : " << debug_sqrtdet << ", " << "EXP : " << debug_exp << ", " << "InvLike : " << debug_invlikelihood
+              <<std::endl;
+
+    //LOG(INFO) << "diff : " << diff.at<double_t>(0, 0) << "," << diff.at<double_t>(0, 1) << "," << diff.at<double_t>(0, 2) << std::endl;
+    //LOG(INFO) << "likelihood : " << index_component << "," << likelihood <<std::endl;
   }
   return likelihood;
 }
 
-double_t Gmm::calcSumOfLikelihood(const cv::Vec3d color) const {
+double_t Gmm::calcSumOfLikelihood(const cv::Mat &vector) const {
   double_t likelihood = 0.0;
   for(int32_t index_component = 0; index_component < kComponentsCount; index_component++)
-    likelihood += m_coefficients[index_component] * calcLikelihoodInComponent(index_component, color);
+    likelihood += m_coefficients[index_component] * calcLikelihoodInComponent(index_component, vector);
   return likelihood;
+}
+
+void Gmm::debugPrintMembers(void) {
+  /* 値の照合 */
+  for(int32_t i = 0; i < kComponentsCount; i++) {
+    LOG(INFO) << "Component : " << i << std::endl;
+    LOG(INFO) << "Coefficient : " << m_coefficients[i] << std::endl;
+    for(int32_t j = 0; j < m_vectormeans[i].channels; j++) {
+      if(0 == j)
+        LOG(INFO) << "Vectormeans : " << std::endl;
+      LOG(INFO) << "(0," << j << ") : " << m_vectormeans[i].val[j] << "," << std::endl;
+    }
+    for(int32_t j = 0; j < m_vectorsums[i].channels; j++) {
+      if(0 == j)
+        LOG(INFO) << "Vectorsums : " << std::endl;
+      LOG(INFO) << "(0," << j << ") : " << m_vectorsums[i].val[j] << "," << std::endl;
+    }
+    for(int32_t j = 0; j < m_product_matrices[i].rows; j++) {
+      for(int32_t k = 0; k < m_product_matrices[i].cols; k++) {
+        if(0 == j && 0 == k)
+          LOG(INFO) << "Productmatrix : " << std::endl;
+        LOG(INFO) << "(" << j << "," << k << ") : " << m_product_matrices[i].at<double_t>(j, k) << "," << std::endl;
+      }
+    }
+    LOG(INFO) << "Determinant" << m_covariant_determinants[i] << std::endl;
+    for(int32_t j = 0; j < m_covariant_matrices[i].rows; j++) {
+      for(int32_t k = 0; k < m_covariant_matrices[i].cols; k++) {
+        if(0 == j && 0 == k)
+          LOG(INFO) << "Covariatnmatrix : " << std::endl;
+        LOG(INFO) << "(" << j << "," << k << ") : " << m_covariant_matrices[i].at<double_t>(j, k) << "," << std::endl;
+      }
+    }
+    for(int32_t j = 0; j < m_inverse_covariant_matrices[i].rows; j++) {
+      for(int32_t k = 0; k < m_inverse_covariant_matrices[i].cols; k++) {
+        if(0 == j && 0 == k)
+          LOG(INFO) << "InverseCovariantmatrix : " << std::endl;
+        LOG(INFO) << "(" << j << "," << k << ") : " << m_inverse_covariant_matrices[i].at<double_t>(j, k) << "," << std::endl;
+      }
+    }
+  }
 }
 
 /*  Log output operator */
@@ -238,10 +315,19 @@ google::LogMessage& operator<<(google::LogMessage& lhs, const Gmm& rhs) {
 
 /*--- Accessor --------------------------------------------------------------*/
 int32_t Gmm::whichComponent(const cv::Vec3d color) const {
+  int32_t retval;
+  cv::Mat vector = cv::Mat(1, kVectorSize, CV_64FC1);
+  for(int32_t i = 0; i < kVectorSize; i++)
+    vector.at<double_t>(0, i) = color.val[i];
+  retval = whichComponent(vector);
+  return retval;
+}
+
+int32_t Gmm::whichComponent(const cv::Mat& vector) const {
   int32_t which = 0;
   double_t max = 0.0;
   for(int32_t index_component = 0; index_component < kComponentsCount; index_component++) {
-    double_t likelihood = calcLikelihoodInComponent(index_component, color);
+    double_t likelihood = calcLikelihoodInComponent(index_component, vector);
     if(likelihood > max) {
       which = index_component;
       max = likelihood;
@@ -249,7 +335,6 @@ int32_t Gmm::whichComponent(const cv::Vec3d color) const {
   }
   return which;
 }
-
 
 /*--- Event -----------------------------------------------------------------*/
 

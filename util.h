@@ -48,7 +48,7 @@ class Util {
   template<typename _Tp>
   static double_t calcDistance(cv::Point_<_Tp> point0, cv::Point_<_Tp> point1) {
     double_t diff_X2 = pow(fabs(point0.x - point1.x), 2.0);
-    double_t diff_Y2 = pow(fabs(point0.x - point1.x), 2.0);
+    double_t diff_Y2 = pow(fabs(point0.y - point1.y), 2.0);
     return sqrt(diff_X2 + diff_Y2);
   }
 
@@ -66,10 +66,10 @@ class Util {
     double_t l2_norm = 0.0;
     if(aside_rows) {
       for(int32_t i = 0; i < vector0.cols; i++)
-        l2_norm += pow(abs(vector0.at<_Tp>(0, i) - abs(vector1.at<_Tp>(0, i))), 2.0);
+        l2_norm += pow(fabs(vector0.at<_Tp>(0, i) - vector1.at<_Tp>(0, i)), 2.0);
     } else {
       for(int32_t i = 0; i < vector0.cols; i++)
-        l2_norm += pow(abs(vector0.at<_Tp>(i, 0) - abs(vector1.at<_Tp>(i, 0))), 2.0);
+        l2_norm += pow(fabs(vector0.at<_Tp>(i, 0) - vector1.at<_Tp>(i, 0)), 2.0);
     }
     return sqrt(l2_norm);
   }
@@ -103,9 +103,9 @@ class Util {
     for(int32_t row = 0; row < rows; row++) {
       for(int32_t col = 0; col < cols; col++) {
         if(cols - 1 == col)
-          logcvs << mat.data[row * cols + col] << std::endl;
+          logcvs << mat.at<_Tp>(row, col) << std::endl;
         else
-          logcvs << mat.data[row * cols + col] << ",";
+          logcvs << mat.at<_Tp>(row, col) << ",";
       }
     }
   }

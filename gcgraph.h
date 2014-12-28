@@ -1,12 +1,3 @@
-/*=============================================================================
- * Project : CvGraphCut
- * Code : gcgraph.h
- * Written : N.Takayama, UEC
- * Date : 2014/12/ 3
- * Copyright (c) 2014 N.Takayama <takayaman@uec.ac.jp>
- * Definition of cvgraphcut_base::GCgraph
- * graph for graphcut. This code is modified version of gcgraph of opencv.
- *===========================================================================*/
 /*M///////////////////////////////////////////////////////////////////////////////////////
 //
 //  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
@@ -48,136 +39,51 @@
 //
 //M*/
 
-#ifndef _CVGRAPHCUT_CVGRAPHCUT_GCGRAPH_H_
-#define _CVGRAPHCUT_CVGRAPHCUT_GCGRAPH_H_
+#ifndef _CV_GCGRAPH_H_
+#define _CV_GCGRAPH_H_
 
-/*=== Include ===============================================================*/
+#include <vector>
+#include <cstdint>
 
-#include <stdint.h>
-#include <glog/logging.h>
+namespace cvgraphcut_base{
 
-#include <opencv2/opencv.hpp>
+class GCGraph
+{
+public:
+    GCGraph();
+    GCGraph( unsigned int vtxCount, unsigned int edgeCount );
+    ~GCGraph();
+    void create( unsigned int vtxCount, unsigned int edgeCount );
+    int addVertex();
+    void addEdges( int i, int j, double w, double revw );
+    void addTerminalWeights( int i, double sourceW, double sinkW );
+    double maxFlow();
+    bool inSourceSegment( int i );
+private:
+    class Vtx
+    {
+    public:
+        Vtx *next; // initialized and used in maxFlow() only
+        int parent;
+        int first;
+        int ts;
+        int dist;
+        double weight;
+        uint8_t t;
+    };
+    class Edge
+    {
+    public:
+        int dst;
+        int next;
+        double weight;
+    };
 
-/*=== Define ================================================================*/
-
-/*=== Class Definition  =====================================================*/
-
-namespace cvgraphcut_base {
-
-/** Graph for cutting based on maxflow algorithm.
- * The algorithm using in this class is based on [Boykov'04]
- * [Boykov'04] Yuri Boykov and Vladimir Kolmogrov,
- * "An Experimental Comparison of Min-Cut/Max-Flow Algorithms for Energy Minimization in Vision",
- * IEEE Trans. on PAMI, Vol.26, No.9, pp.1124-1137, Sep. 2004.
- */
-class GCGraph {
- public:
-  /** Defoult constructor.
-   *
-   */
-  GCGraph(void);
-
-  /** Constructor with reserve vertices and edges area.
-   * @param vertexcount
-   * @param edgecount
-   */
-  GCGraph(uint8_t vertexcount, uint8_t edgecount);
-
-  /** Default destructor
-   *
-   */
-  ~GCGraph(void);
-
-  /** Copy constructor
-   * @param rhs Right hand side
-   */
-  GCGraph(const GCGraph& rhs);
-
-  /** Assignment operator
-   * @param rhs Right hand side
-   * @return pointer of this object
-   */
-  GCGraph& operator=(const GCGraph& rhs);
-
-  /** Reserve vertices and edges area
-   * @param vertexcount
-   * @param edgecount
-   * @return None
-   */
-  void create(uint8_t vertexcount, uint8_t edgecount);
-
-  /** Add Vertex to graph
-   * @return Index of added vertex
-   */
-  int32_t addVertex(void);
-
-  /** Add an bi-direction edge between two vertices and assign weight to edge.
-   * @param i Index of one vertex
-   * @param j Index of other vertex
-   * @param weight A weight of edge directed from i to j.
-   * @param reverseweight A weight of edge directed from j to i.
-   * @return None
-   */
-  void addEdges(int32_t i, int32_t j, double_t weight, double_t reverseweight);
-
-  /** Add two directional edges and assign weights.
-   * One edge is directed from source to i, and other is from i to sink.
-   * @param i Index of a vertex.
-   * @param sourceweight A weight of edge directed from source to i.
-   * @param sinkweight A weight of edge directed from i to sink.
-   * @return None
-   */
-  void addTerminalWeights(int32_t i, double_t sourceweight, double_t sinkweight);
-
-  /** Run maxflow algorithm to cut a graph.
-   * @return Total flow.
-   */
-  double_t maxFlow(void);
-
-  /** Return whether the vertex is in source segment.
-   * @param index_vertex Index of vertex
-   * @return true : in source, false : in sink
-   */
-  bool inSourceSegment(int32_t index_vertex);
-
- private:
-  /** Vertex class for cutting graph.
-   */
-  class GCVertex {
-   public:
-    GCVertex *next;  /**< next vertex to search */
-    int32_t parent;                     /**< parent vertex */
-    int32_t firstsearch_edge;           /**< The edge to search first */
-    int32_t searchtreeid;               /**< Treeid to search */
-    int32_t distance;                   /**< Num of edges from tree root */
-    double_t weight;                    /**< A weidght to tree root(source/sink) */
-    uint8_t treeid;  /**< 0:Source, other:Sink */
-  };
-
-  /** Edge class for cutting graph.
-   */
-  class GCEdge {
-   public:
-    int32_t destination_vertex;         /**< Index of destination vertex */
-    int32_t nextsearch_edge;            /**< Index of the edge of searching next */
-    double_t weight;                    /**< A weight between vertices */
-  };
-
-  std::vector<GCVertex> m_vertexes;
-  std::vector<GCEdge> m_edges;
-  double_t m_flow;
-
+    std::vector<Vtx> vtcs;
+    std::vector<Edge> edges;
+    double flow;
 };
 
-/*!
- * Log output operator
- * @param lhs Left hand side
- * @param rhs Right hand side
- * @return Pointer of google::LogSink object
- */
-google::LogMessage& operator<<(google::LogMessage& lhs, const GCGraph& rhs);
+}
 
-}  // namespace cvgraphcut_base
-
-
-#endif  // _CVGRAPHCUT_CVGRAPHCUT_GCGRAPH_H_
+#endif
